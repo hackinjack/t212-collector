@@ -1,0 +1,83 @@
+"""Trading 212 collection orchestration."""
+
+import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+from .config import DATABASE_PATH, get_api_credentials
+from .database import Database
+from .t212 import Trading212Client, validate_account_summary
+
+
+LOG = logging.getLogger(__name__)
+
+LONDON = ZoneInfo("Europe/London")
+
+
+def collect() -> None:
+    """Collect and persist one Trading 212 account snapshot."""
+
+    database = Database(DATABASE_PATH)
+    database.initialise()
+
+    sync_id = database.record_sync_start("t212_account_snapshot")
+
+    try:
+        api_key, api_secret = get_api_credentials()
+
+        client = Trading212Client(
+            api_key=api_key,
+            api_secret=api_secret,
+        )
+
+        data = client.get_account_summary()
+
+        validate_account_summary(data)
+
+        account_id = database.ensure_account(
+            external_id=str(data["id"]),
+            currency=data["currency"],
+        )
+
+        captured_at = datetime.now().astimezone()
+        captured_at_utc = captured_at.astimezone(
+            ZoneInfo("UTC")
+        ).isoformat()
+
+        business_date = captured_at.astimezone(
+            LONDON
+        ).date().isoformat()
+
+        database.save_snapshot(
+            account_id=account_id,
+            data=data,
+        )
+
+        database.save_daily_balance(
+            account_id=account_id,
+            data=data,
+            business_date=business_date,
+            captured_at=captured_at_utc,
+        )
+
+        database.record_sync_complete(
+            sync_id=sync_id,
+            status="success",
+            records_processed=1,
+        )
+
+        LOG.info(
+            "Trading 212 snapshot collected: "
+            "account=%s total=%s %s",
+            data["id"],
+            data["totalValue"],
+            data["currency"],
+        )
+
+    except Exception as exc:
+        database.record_sync_complete(
+            sync_id=sync_id,
+            status="failed",
+            error=str(exc),
+        )
+        raise

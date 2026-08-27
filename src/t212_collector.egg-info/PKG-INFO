@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: t212-collector
+Version: 0.2.0
+Summary: Self-hosted Trading 212 portfolio collector
+Requires-Python: >=3.12
+License-File: LICENSE
+Requires-Dist: requests<3,>=2.31
+Requires-Dist: python-dotenv<2,>=1.0
+Dynamic: license-file

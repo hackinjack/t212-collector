@@ -1,0 +1,2 @@
+[console_scripts]
+t212-collector = t212_collector.cli:main

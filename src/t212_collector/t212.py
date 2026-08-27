@@ -1,0 +1,124 @@
+"""Trading 212 API client."""
+
+from typing import Any
+
+import requests
+
+
+BASE_URL = "https://live.trading212.com/api/v0"
+PROVIDER = "trading212"
+
+
+class Trading212Error(RuntimeError):
+    """Trading 212 API error."""
+
+
+class Trading212Client:
+    """Small client for the Trading 212 API."""
+
+    def __init__(
+        self,
+        api_key: str,
+        api_secret: str,
+        timeout: int = 30,
+    ):
+        self.auth = (api_key, api_secret)
+        self.timeout = timeout
+
+    def get_account_summary(self) -> dict[str, Any]:
+        """Retrieve the current account summary."""
+
+        url = f"{BASE_URL}/equity/account/summary"
+
+        try:
+            response = requests.get(
+                url,
+                auth=self.auth,
+                timeout=self.timeout,
+            )
+        except requests.RequestException as exc:
+            raise Trading212Error(
+                f"Trading 212 request failed: {exc}"
+            ) from exc
+
+        if response.status_code == 429:
+            raise Trading212Error(
+                "Trading 212 API rate limit exceeded"
+            )
+
+        if response.status_code in (401, 403):
+            raise Trading212Error(
+                f"Trading 212 authentication/authorisation failed "
+                f"(HTTP {response.status_code})"
+            )
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as exc:
+            raise Trading212Error(
+                f"Trading 212 returned HTTP {response.status_code}"
+            ) from exc
+
+        try:
+            return response.json()
+        except ValueError as exc:
+            raise Trading212Error(
+                "Trading 212 returned invalid JSON"
+            ) from exc
+
+
+def validate_account_summary(data: dict[str, Any]) -> None:
+    """Validate the fields required by the collector."""
+
+    required = {
+        "id",
+        "currency",
+        "totalValue",
+        "cash",
+        "investments",
+    }
+
+    missing = required - data.keys()
+
+    if missing:
+        raise Trading212Error(
+            "Trading 212 response missing fields: "
+            + ", ".join(sorted(missing))
+        )
+
+    required_cash = {
+        "availableToTrade",
+        "reservedForOrders",
+        "inPies",
+    }
+
+    missing_cash = required_cash - data["cash"].keys()
+
+    if missing_cash:
+        raise Trading212Error(
+            "Trading 212 cash response missing fields: "
+            + ", ".join(sorted(missing_cash))
+        )
+
+    required_investments = {
+        "currentValue",
+        "totalCost",
+        "realizedProfitLoss",
+        "unrealizedProfitLoss",
+    }
+
+    missing_investments = (
+        required_investments - data["investments"].keys()
+    )
+
+    if missing_investments:
+        raise Trading212Error(
+            "Trading 212 investment response missing fields: "
+            + ", ".join(sorted(missing_investments))
+        )
+
+    if not isinstance(data["id"], int):
+        raise Trading212Error("Trading 212 account ID is not an integer")
+
+    if not isinstance(data["currency"], str) or not data["currency"]:
+        raise Trading212Error("Trading 212 currency is invalid")
