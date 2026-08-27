@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Trading 212 collector daily
+
+[Timer]
+OnCalendar=*-*-* 08:00:00 Europe/London
+Persistent=true
+Unit=t212-collector.service
+
+[Install]
+WantedBy=timers.target

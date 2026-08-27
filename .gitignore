@@ -1,0 +1,29 @@
+# Secrets
+.env
+*.env
+
+# Local data
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+logs/
+*.out
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Editors / OS
+.vim/
+.vscode/
+.idea/
+.DS_Store

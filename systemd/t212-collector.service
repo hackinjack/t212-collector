@@ -1,0 +1,20 @@
+[Unit]
+Description=Trading 212 Portfolio Collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=t212
+Group=t212
+WorkingDirectory=/opt/t212-collector
+ExecStart=/opt/t212-collector/venv/bin/python /opt/t212-collector/collector.py
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/t212-collector
+
+[Install]
+WantedBy=multi-user.target
