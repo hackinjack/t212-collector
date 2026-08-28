@@ -148,7 +148,7 @@ class Database:
                 """,
                 (
                     captured_at,
-                    int(data["id"]),
+                    account_id,
                     data["currency"],
                     float(data["totalValue"]),
                     float(data["cash"]["availableToTrade"]),
