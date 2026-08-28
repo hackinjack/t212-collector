@@ -154,7 +154,6 @@ def create_app(
             ],
         )
 
-    @app.get("/api/v1/snapshots")
     @app.get("/api/v1/export/snapshots/<token>")
     def snapshots(token):
         """Return raw collection snapshots."""
@@ -178,7 +177,7 @@ def create_app(
                     s.realized_profit_loss,
                     s.unrealized_profit_loss
                 FROM daily_snapshots s
-                LEFT JOIN accounts a
+                JOIN accounts a
                     ON a.external_id =
                        CAST(s.account_id AS TEXT)
                 ORDER BY s.captured_at
