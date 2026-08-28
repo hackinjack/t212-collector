@@ -2,13 +2,8 @@
 
 import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 
-
-MIGRATIONS_DIR = (
-    Path(__file__).resolve().parents[2] / "migrations"
-)
-
+from .config import MIGRATIONS_PATH
 
 def ensure_migration_table(
     connection: sqlite3.Connection,
@@ -69,7 +64,7 @@ def apply_migrations(
     legacy_schema = database_has_legacy_schema(connection)
 
     migration_files = sorted(
-        MIGRATIONS_DIR.glob("[0-9][0-9][0-9]_*.sql")
+        MIGRATIONS_PATH.glob("[0-9][0-9][0-9]_*.sql")
     )
 
     for migration_file in migration_files:

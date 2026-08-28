@@ -18,6 +18,10 @@ DATABASE_PATH = Path(
     os.getenv("T212_DATABASE", BASE_DIR / "portfolio.db")
 )
 
+MIGRATIONS_PATH = Path(
+    os.getenv("T212_MIGRATIONS", BASE_DIR / "migrations")
+)
+
 load_dotenv(ENV_FILE)
 
 
