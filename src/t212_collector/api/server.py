@@ -17,21 +17,10 @@ def create_app(
 
     app = Flask(__name__)
 
-    def authorised() -> bool:
-        """Validate the capability token."""
+    def require_export_auth(token: str) -> None:
+        """Validate the export capability token."""
 
-        supplied = request.args.get("token", "")
-
-        return bool(
-            supplied
-            and api_token
-            and supplied == api_token
-        )
-
-    def require_auth() -> None:
-        """Reject unauthorised requests."""
-
-        if not authorised():
+        if not token or not api_token or token != api_token:
             abort(404)
 
     def connect() -> sqlite3.Connection:
@@ -86,11 +75,11 @@ def create_app(
                 "status": "error",
             }), 503
 
-    @app.get("/api/v1/accounts")
-    def accounts():
+    @app.get("/api/v1/export/accounts/<token>")
+    def accounts(token):
         """Return known accounts."""
 
-        require_auth()
+        require_export_auth(token)
 
         with connect() as connection:
             rows = connection.execute(
@@ -124,11 +113,11 @@ def create_app(
             ],
         )
 
-    @app.get("/api/v1/balances")
-    def balances():
+    @app.get("/api/v1/export/balances/<token>")
+    def balances(token):
         """Return canonical daily balances."""
 
-        require_auth()
+        require_export_auth(token)
 
         with connect() as connection:
             rows = connection.execute(
@@ -166,10 +155,11 @@ def create_app(
         )
 
     @app.get("/api/v1/snapshots")
-    def snapshots():
+    @app.get("/api/v1/export/snapshots/<token>")
+    def snapshots(token):
         """Return raw collection snapshots."""
 
-        require_auth()
+        require_export_auth(token)
 
         with connect() as connection:
             rows = connection.execute(
@@ -217,10 +207,11 @@ def create_app(
         )
 
     @app.get("/api/v1/income")
-    def income():
+    @app.get("/api/v1/export/income/<token>")
+    def income(token):
         """Return normalised income records."""
 
-        require_auth()
+        require_export_auth(token)
 
         with connect() as connection:
             rows = connection.execute(
@@ -265,10 +256,11 @@ def create_app(
         )
 
     @app.get("/api/v1/tax-summary")
-    def tax_summary():
+    @app.get("/api/v1/export/tax-summary/<token>")
+    def tax_summary(token):
         """Return income aggregated by UK financial year."""
 
-        require_auth()
+        require_export_auth(token)
 
         with connect() as connection:
             rows = connection.execute(
