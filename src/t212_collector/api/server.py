@@ -5,6 +5,7 @@ import io
 import os
 import sqlite3
 from pathlib import Path
+from dotenv import load_dotenv
 
 from flask import Flask, Response, abort, jsonify, request
 
@@ -312,10 +313,26 @@ def create_app(
 def main() -> None:
     """Run the development API server."""
 
+    base_dir = Path(
+        os.getenv(
+            "T212_BASE_DIR",
+            "/opt/t212-collector",
+        )
+    )
+
+    env_file = Path(
+        os.getenv(
+            "T212_ENV_FILE",
+            base_dir / ".env",
+        )
+    )
+
+    load_dotenv(env_file)
+
     database_path = Path(
         os.getenv(
             "T212_DATABASE",
-            "/opt/t212-collector/portfolio.db",
+            base_dir / "portfolio.db",
         )
     )
 
@@ -336,7 +353,6 @@ def main() -> None:
         port=8080,
         debug=False,
     )
-
 
 if __name__ == "__main__":
     main()
