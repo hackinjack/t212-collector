@@ -6,6 +6,7 @@ src/t212_collector/cli.py
 src/t212_collector/collector.py
 src/t212_collector/config.py
 src/t212_collector/database.py
+src/t212_collector/migrations.py
 src/t212_collector/t212.py
 src/t212_collector.egg-info/PKG-INFO
 src/t212_collector.egg-info/SOURCES.txt
@@ -13,3 +14,5 @@ src/t212_collector.egg-info/dependency_links.txt
 src/t212_collector.egg-info/entry_points.txt
 src/t212_collector.egg-info/requires.txt
 src/t212_collector.egg-info/top_level.txt
+src/t212_collector/google/__init__.py
+src/t212_collector/google/auth.py
