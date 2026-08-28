@@ -111,11 +111,11 @@ class Database:
                 (str(external_id),),
             ).fetchone()
 
-            connection.commit()
-
         if row is None:
-            raise RuntimeError("Unable to create Trading 212 account")
-
+            raise RuntimeError(
+                f"Trading 212 account not found after ensure: "
+                f"{external_id}"
+            )
         return int(row["id"])
 
     def save_snapshot(
