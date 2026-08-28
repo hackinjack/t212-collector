@@ -9,10 +9,11 @@ from .config import DATABASE_PATH
 from .database import Database
 
 from pathlib import Path
-from .google.auth import authenticate
 
 def google_auth() -> None:
     """Perform Google OAuth authentication."""
+
+    from .google.auth import authenticate
 
     base_dir = Path(
         __import__("os").environ.get(
