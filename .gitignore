@@ -1,6 +1,8 @@
 # Secrets
 .env
 *.env
+credentials.json
+token.json
 
 # Local data
 *.db
@@ -9,6 +11,7 @@
 *.db-journal
 *.db-wal
 *.db-shm
+.local
 
 # Logs
 *.log

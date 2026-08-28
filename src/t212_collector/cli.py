@@ -8,6 +8,36 @@ from .collector import collect
 from .config import DATABASE_PATH
 from .database import Database
 
+from pathlib import Path
+from .google.auth import authenticate
+
+def google_auth() -> None:
+    """Perform Google OAuth authentication."""
+
+    base_dir = Path(
+        __import__("os").environ.get(
+            "T212_BASE_DIR",
+            "/opt/t212-collector",
+        )
+    )
+
+    credentials_file = base_dir / "credentials.json"
+    token_file = base_dir / "token.json"
+
+    if not credentials_file.exists():
+        raise RuntimeError(
+            f"Google credentials file not found: "
+            f"{credentials_file}"
+        )
+
+    credentials = authenticate(
+        credentials_file=credentials_file,
+        token_file=token_file,
+    )
+
+    print("Google authentication successful.")
+    print(f"Token saved to: {token_file}")
+    print(f"Scopes: {credentials.scopes}")
 
 def configure_logging() -> None:
     """Configure simple console logging."""
@@ -67,6 +97,11 @@ def main() -> None:
         help="Display database status",
     )
 
+    subparsers.add_parser(
+        "google-auth",
+        help="Authenticate with Google",
+)
+
     args = parser.parse_args()
 
     configure_logging()
@@ -75,6 +110,8 @@ def main() -> None:
         collect()
     elif args.command == "status":
         status()
+    elif args.command == "google-auth":
+        google_auth()
 
 
 if __name__ == "__main__":
