@@ -60,10 +60,17 @@ def collect() -> None:
             captured_at=captured_at_utc,
         )
 
+        dividends = client.get_dividends()
+
+        income_count = database.save_income(
+            account_id=account_id,
+            items=dividends,
+        )
+
         database.record_sync_complete(
             sync_id=sync_id,
             status="success",
-            records_processed=1,
+            records_processed=1 + income_count,
         )
 
         LOG.info(
@@ -72,6 +79,7 @@ def collect() -> None:
             data["id"],
             data["totalValue"],
             data["currency"],
+            income_count,
         )
 
     except Exception as exc:

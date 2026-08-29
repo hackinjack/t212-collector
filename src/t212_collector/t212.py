@@ -65,6 +65,76 @@ class Trading212Client:
             raise Trading212Error(
                 "Trading 212 returned invalid JSON"
             ) from exc
+    def get_dividends(
+        self,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Retrieve all historical dividend events."""
+
+        url = f"{BASE_URL}/equity/history/dividends"
+
+        params = {
+            "limit": limit,
+        }
+
+        items: list[dict[str, Any]] = []
+
+        while True:
+            try:
+                response = requests.get(
+                    url,
+                    auth=self.auth,
+                    params=params,
+                    timeout=self.timeout,
+                )
+            except requests.RequestException as exc:
+                raise Trading212Error(
+                    f"Trading 212 request failed: {exc}"
+                ) from exc
+
+            if response.status_code == 429:
+                raise Trading212Error(
+                    "Trading 212 API rate limit exceeded"
+                )
+
+            if response.status_code in (401, 403):
+                raise Trading212Error(
+                    f"Trading 212 authentication/authorisation failed "
+                    f"(HTTP {response.status_code})"
+                )
+
+            try:
+                response.raise_for_status()
+            except requests.HTTPError as exc:
+                raise Trading212Error(
+                    f"Trading 212 returned HTTP {response.status_code}"
+                ) from exc
+
+            try:
+                data = response.json()
+            except ValueError as exc:
+                raise Trading212Error(
+                    "Trading 212 returned invalid JSON"
+                ) from exc
+
+            page_items = data.get("items")
+
+            if not isinstance(page_items, list):
+                raise Trading212Error(
+                    "Trading 212 dividends response has invalid items"
+                )
+
+            items.extend(page_items)
+
+            next_page_path = data.get("nextPagePath")
+
+            if not next_page_path:
+                break
+
+            url = f"https://live.trading212.com{next_page_path}"
+            params = {}
+
+        return items
 
 
 def validate_account_summary(data: dict[str, Any]) -> None:

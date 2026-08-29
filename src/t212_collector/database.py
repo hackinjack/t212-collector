@@ -201,6 +201,109 @@ class Database:
 
             connection.commit()
 
+    def save_income(
+            self,
+            account_id: int,
+            items: list[dict],
+        ) -> int:
+        """Save normalised Trading 212 income records."""
+
+        saved = 0
+
+        with self.connect() as connection:
+            for item in items:
+                if item.get("type") != "DIVIDEND":
+                    continue
+
+                reference = item.get("reference")
+                paid_on = item.get("paidOn")
+                amount = item.get("amount")
+                currency = item.get("currency")
+                instrument = item.get("ticker")
+
+                if not reference:
+                    raise ValueError(
+                        "Dividend response missing reference"
+                    )
+
+                if not paid_on:
+                    raise ValueError(
+                        f"Dividend {reference} missing paidOn"
+                    )
+
+                if amount is None:
+                    raise ValueError(
+                        f"Dividend {reference} missing amount"
+                    )
+
+                if not currency:
+                    raise ValueError(
+                        f"Dividend {reference} missing currency"
+                    )
+
+                transaction_date = paid_on[:10]
+
+                year = int(transaction_date[:4])
+                month = int(transaction_date[5:7])
+
+                if month >= 4:
+                    financial_year = f"{year}/{str(year + 1)[-2:]}"
+                else:
+                    financial_year = f"{year - 1}/{str(year)[-2:]}"
+
+                connection.execute(
+                    """
+                    INSERT INTO income (
+                        transaction_id,
+                        transaction_date,
+                        financial_year,
+                        account_id,
+                        income_type,
+                        currency,
+                        gross_amount,
+                        withholding_tax,
+                        net_amount,
+                        instrument,
+                        raw_json
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(transaction_id)
+                    DO UPDATE SET
+                        transaction_date = excluded.transaction_date,
+                        financial_year = excluded.financial_year,
+                        account_id = excluded.account_id,
+                        income_type = excluded.income_type,
+                        currency = excluded.currency,
+                        gross_amount = excluded.gross_amount,
+                        withholding_tax = excluded.withholding_tax,
+                        net_amount = excluded.net_amount,
+                        instrument = excluded.instrument,
+                        raw_json = excluded.raw_json
+                    """,
+                    (
+                        reference,
+                        transaction_date,
+                        financial_year,
+                        account_id,
+                        "dividend",
+                        currency,
+                        float(amount),
+                        0.0,
+                        float(amount),
+                        instrument,
+                        json.dumps(
+                            item,
+                            separators=(",", ":"),
+                        ),
+                    ),
+                )
+
+                saved += 1
+
+            connection.commit()
+
+        return saved
+
     def record_sync_start(self, operation: str) -> int:
         """Record the beginning of a synchronisation operation."""
 
