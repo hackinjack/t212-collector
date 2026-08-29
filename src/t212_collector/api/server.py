@@ -179,8 +179,7 @@ def create_app(
                     s.unrealized_profit_loss
                 FROM daily_snapshots s
                 JOIN accounts a
-                    ON a.external_id =
-                       CAST(s.account_id AS TEXT)
+                    ON a.id = s.account_id
                 ORDER BY s.captured_at
                 """
             ).fetchall()
