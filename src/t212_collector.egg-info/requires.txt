@@ -1,2 +1,6 @@
 requests<3,>=2.31
 python-dotenv<2,>=1.0
+flask<4,>=3.1
+google-api-python-client<3,>=2.180
+google-auth<3,>=2.40
+google-auth-oauthlib<2,>=1.2

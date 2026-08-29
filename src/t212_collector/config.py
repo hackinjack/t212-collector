@@ -14,6 +14,9 @@ ENV_FILE = Path(
     os.getenv("T212_ENV_FILE", BASE_DIR / ".env")
 )
 
+# Load environment before reading configuration values.
+load_dotenv(ENV_FILE)
+
 DATABASE_PATH = Path(
     os.getenv("T212_DATABASE", BASE_DIR / "portfolio.db")
 )
@@ -22,7 +25,18 @@ MIGRATIONS_PATH = Path(
     os.getenv("T212_MIGRATIONS", BASE_DIR / "migrations")
 )
 
-load_dotenv(ENV_FILE)
+GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv(
+    "T212_GOOGLE_SERVICE_ACCOUNT_FILE"
+)
+
+GOOGLE_SPREADSHEET_ID = os.getenv(
+    "T212_GOOGLE_SPREADSHEET_ID"
+)
+
+GOOGLE_API_BASE_URL = os.getenv(
+    "T212_GOOGLE_API_BASE_URL",
+    "http://127.0.0.1:8080",
+)
 
 
 def get_api_credentials() -> tuple[str, str]:

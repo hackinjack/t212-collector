@@ -1,5 +1,9 @@
 """Command-line interface."""
 
+import os
+
+from dotenv import load_dotenv
+
 import argparse
 import logging
 import sqlite3
@@ -9,6 +13,13 @@ from .config import DATABASE_PATH
 from .database import Database
 
 from pathlib import Path
+
+from .config import (
+    DATABASE_PATH,
+    GOOGLE_SERVICE_ACCOUNT_FILE,
+    GOOGLE_API_BASE_URL,
+    GOOGLE_SPREADSHEET_ID,
+)
 
 def google_auth() -> None:
     """Perform Google OAuth authentication."""
@@ -76,8 +87,53 @@ def status() -> None:
         print(f"Daily balances: {balance_count}")
         print(f"Income records: {income_count}")
 
+def google_sheets_export() -> None:
+    """Export portfolio data to Google Sheets."""
+
+    from .google.sheets import export
+
+    api_token = os.environ.get("T212_API_TOKEN")
+
+    if not GOOGLE_SERVICE_ACCOUNT_FILE:
+        raise RuntimeError(
+            "T212_GOOGLE_SERVICE_ACCOUNT_FILE is not configured"
+        )
+
+    if not GOOGLE_SPREADSHEET_ID:
+        raise RuntimeError(
+            "T212_GOOGLE_SPREADSHEET_ID is not configured"
+        )
+
+    if not api_token:
+        raise RuntimeError(
+            "T212_API_TOKEN is not configured"
+        )
+
+    export(
+        credentials_file=GOOGLE_SERVICE_ACCOUNT_FILE,
+        spreadsheet_id=GOOGLE_SPREADSHEET_ID,
+        api_base_url=GOOGLE_API_BASE_URL,
+        api_token=api_token,
+    )
+
 def main() -> None:
     """Run the command-line interface."""
+
+    base_dir = Path(
+        os.getenv(
+            "T212_BASE_DIR",
+            "/opt/t212-collector",
+        )
+    )
+
+    env_file = Path(
+        os.getenv(
+            "T212_ENV_FILE",
+            base_dir / ".env",
+        )
+    )
+
+    load_dotenv(env_file)
 
     parser = argparse.ArgumentParser(
         description="Trading 212 portfolio collector"
@@ -101,7 +157,12 @@ def main() -> None:
     subparsers.add_parser(
         "google-auth",
         help="Authenticate with Google",
-)
+    )
+
+    subparsers.add_parser(
+        "sheets-export",
+        help="Export portfolio data to Google Sheets",
+    )
 
     args = parser.parse_args()
 
@@ -113,6 +174,8 @@ def main() -> None:
         status()
     elif args.command == "google-auth":
         google_auth()
+    elif args.command == "sheets-export":
+        google_sheets_export()
 
 
 if __name__ == "__main__":
