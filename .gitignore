@@ -30,3 +30,6 @@ venv/
 .vscode/
 .idea/
 .DS_Store
+
+# Python build metadata
+*.egg-info/
