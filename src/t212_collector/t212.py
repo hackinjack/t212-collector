@@ -136,6 +136,62 @@ class Trading212Client:
 
         return items
 
+    def get_transactions(self) -> list[dict[str, Any]]:
+        """Retrieve all historical account transactions."""
+
+        items: list[dict[str, Any]] = []
+        path = "/equity/history/transactions?limit=50"
+
+        while path:
+            url = f"{BASE_URL}{path}"
+
+            try:
+                response = requests.get(
+                    url,
+                    auth=self.auth,
+                    timeout=self.timeout,
+                )
+            except requests.RequestException as exc:
+                raise Trading212Error(
+                    f"Trading 212 request failed: {exc}"
+                ) from exc
+
+            if response.status_code == 429:
+                raise Trading212Error(
+                    "Trading 212 API rate limit exceeded"
+                )
+
+            if response.status_code in (401, 403):
+                raise Trading212Error(
+                    f"Trading 212 authentication/authorisation failed "
+                    f"(HTTP {response.status_code})"
+                )
+
+            try:
+                response.raise_for_status()
+            except requests.HTTPError as exc:
+                raise Trading212Error(
+                    f"Trading 212 returned HTTP {response.status_code}"
+                ) from exc
+
+            try:
+                data = response.json()
+            except ValueError as exc:
+                raise Trading212Error(
+                    "Trading 212 returned invalid JSON"
+                ) from exc
+
+            page_items = data.get("items", [])
+
+            if not isinstance(page_items, list):
+                raise Trading212Error(
+                    "Trading 212 transactions response has invalid items"
+                )
+
+            items.extend(page_items)
+            path = data.get("nextPagePath")
+
+        return items
 
 def validate_account_summary(data: dict[str, Any]) -> None:
     """Validate the fields required by the collector."""

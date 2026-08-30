@@ -61,10 +61,17 @@ def collect() -> None:
         )
 
         dividends = client.get_dividends()
+        transactions = client.get_transactions()
+
+        income_items = dividends + [
+            item
+            for item in transactions
+            if item.get("type") == "INTEREST_ON_FREE_CASH"
+        ]
 
         income_count = database.save_income(
             account_id=account_id,
-            items=dividends,
+            items=income_items,
         )
 
         database.record_sync_complete(

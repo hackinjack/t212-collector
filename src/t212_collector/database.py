@@ -212,11 +212,13 @@ class Database:
 
         with self.connect() as connection:
             for item in items:
-                if item.get("type") != "DIVIDEND":
+                income_type = item.get("type")
+
+                if income_type not in {"DIVIDEND", "INTEREST_ON_FREE_CASH"}:
                     continue
 
                 reference = item.get("reference")
-                paid_on = item.get("paidOn")
+                paid_on = item.get("paidOn") or item.get("dateTime")
                 amount = item.get("amount")
                 currency = item.get("currency")
                 instrument = item.get("ticker")
@@ -285,7 +287,9 @@ class Database:
                         transaction_date,
                         financial_year,
                         account_id,
-                        "dividend",
+                        "dividend"
+                        if income_type == "DIVIDEND"
+                        else "interest",
                         currency,
                         float(amount),
                         0.0,
