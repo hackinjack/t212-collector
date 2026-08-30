@@ -140,15 +140,16 @@ class Trading212Client:
         """Retrieve all historical account transactions."""
 
         items: list[dict[str, Any]] = []
-        path = "/equity/history/transactions?limit=50"
+        url = f"{BASE_URL}/equity/history/transactions"
+        params = {"limit": 50}
 
-        while path:
-            url = f"{BASE_URL}{path}"
+        while True:
 
             try:
                 response = requests.get(
                     url,
                     auth=self.auth,
+                    params=params,
                     timeout=self.timeout,
                 )
             except requests.RequestException as exc:
@@ -189,7 +190,14 @@ class Trading212Client:
                 )
 
             items.extend(page_items)
-            path = data.get("nextPagePath")
+
+            next_page_path = data.get("nextPagePath")
+
+            if not next_page_path:
+                break
+
+            url = f"https://live.trading212.com{next_page_path}"
+            params = {}
 
         return items
 
