@@ -61,7 +61,8 @@ def collect() -> None:
         )
 
         dividends = client.get_dividends()
-        transactions = client.get_transactions()
+
+        transactions = client.get_transactions(max_pages=1)
 
         income_items = dividends + [
             item

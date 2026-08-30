@@ -136,15 +136,18 @@ class Trading212Client:
 
         return items
 
-    def get_transactions(self) -> list[dict[str, Any]]:
+    def get_transactions(
+        self,
+        max_pages: int | None = None,
+    ) -> list[dict[str, Any]]:
         """Retrieve all historical account transactions."""
 
         items: list[dict[str, Any]] = []
         url = f"{BASE_URL}/equity/history/transactions"
         params = {"limit": 50}
+        pages = 0
 
         while True:
-
             try:
                 response = requests.get(
                     url,
@@ -190,6 +193,10 @@ class Trading212Client:
                 )
 
             items.extend(page_items)
+            pages += 1
+
+            if max_pages is not None and pages >= max_pages:
+                break
 
             next_page_path = data.get("nextPagePath")
 
