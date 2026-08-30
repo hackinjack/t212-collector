@@ -75,7 +75,7 @@ def collect() -> None:
 
         LOG.info(
             "Trading 212 snapshot collected: "
-            "account=%s total=%s %s",
+            "account=%s total=%s %s income_records=%s",
             data["id"],
             data["totalValue"],
             data["currency"],
