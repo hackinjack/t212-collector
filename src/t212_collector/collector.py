@@ -35,8 +35,10 @@ def collect() -> None:
         validate_account_summary(data)
 
         account_id = database.ensure_account(
+            provider="trading212",
             external_id=str(data["id"]),
             currency=data["currency"],
+            name="Trading 212",
         )
 
         captured_at = datetime.now().astimezone()

@@ -51,16 +51,17 @@ class Database:
                 WHERE provider = ?
                   AND external_id = ?
                 """,
-                (provider, external_id),
+                (provider, str(external_id)),
             ).fetchone()
 
     def ensure_account(
         self,
+        provider: str,
         external_id: str,
         currency: str,
-        name: str = "Trading 212",
+        name: str,
     ) -> int:
-        """Create or update the Trading 212 account."""
+        """Create or update an account."""
 
         now = datetime.now(timezone.utc).isoformat()
 
@@ -77,7 +78,7 @@ class Database:
                     updated_at
                 )
                 VALUES (
-                    'trading212',
+                    ?,
                     ?,
                     ?,
                     ?,
@@ -93,6 +94,7 @@ class Database:
                     updated_at = excluded.updated_at
                 """,
                 (
+                    provider,
                     str(external_id),
                     name,
                     currency,
@@ -105,18 +107,23 @@ class Database:
                 """
                 SELECT id
                 FROM accounts
-                WHERE provider = 'trading212'
+                WHERE provider = ?
                   AND external_id = ?
                 """,
-                (str(external_id),),
+                (
+                    provider,
+                    str(external_id),
+                ),
             ).fetchone()
 
         if row is None:
             raise RuntimeError(
-                f"Trading 212 account not found after ensure: "
+                f"{provider} account not found after ensure: "
                 f"{external_id}"
             )
+
         return int(row["id"])
+
 
     def save_snapshot(
         self,
