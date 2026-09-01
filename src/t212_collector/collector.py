@@ -5,9 +5,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from .config import DATABASE_PATH, get_api_credentials
+from .connector_registry import get_connector
 from .database import Database
-from .t212 import Trading212Client
-
 
 LOG = logging.getLogger(__name__)
 
@@ -25,7 +24,9 @@ def collect() -> None:
     try:
         api_key, api_secret = get_api_credentials()
 
-        client = Trading212Client(
+        connector_class = get_connector("trading212")
+
+        client = connector_class(
             api_key=api_key,
             api_secret=api_secret,
         )
