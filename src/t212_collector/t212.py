@@ -1,6 +1,7 @@
 """Trading 212 API client."""
 
 from typing import Any
+from .connectors import AccountSnapshot
 
 import requests
 
@@ -65,6 +66,23 @@ class Trading212Client:
             raise Trading212Error(
                 "Trading 212 returned invalid JSON"
             ) from exc
+
+
+    def get_account_snapshot(self) -> AccountSnapshot:
+        """Retrieve and normalise the current account snapshot."""
+
+        data = self.get_account_summary()
+        validate_account_summary(data)
+
+        return AccountSnapshot(
+            provider="trading212",
+            external_id=str(data["id"]),
+            name="Trading 212",
+            currency=data["currency"],
+            total_value=float(data["totalValue"]),
+            raw_data=data,
+        )
+
     def get_dividends(
         self,
         limit: int = 50,

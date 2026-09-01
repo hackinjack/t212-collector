@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 from .config import DATABASE_PATH, get_api_credentials
 from .database import Database
-from .t212 import Trading212Client, validate_account_summary
+from .t212 import Trading212Client
 
 
 LOG = logging.getLogger(__name__)
@@ -30,15 +30,15 @@ def collect() -> None:
             api_secret=api_secret,
         )
 
-        data = client.get_account_summary()
+        snapshot = client.get_account_snapshot()
 
-        validate_account_summary(data)
+        data = snapshot.raw_data
 
         account_id = database.ensure_account(
-            provider="trading212",
-            external_id=str(data["id"]),
-            currency=data["currency"],
-            name="Trading 212",
+            provider=snapshot.provider,
+            external_id=snapshot.external_id,
+            currency=snapshot.currency,
+            name=snapshot.name,
         )
 
         captured_at = datetime.now().astimezone()
